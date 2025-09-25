@@ -1,7 +1,6 @@
 package com.example.sgb.repository;
 
 import com.example.sgb.model.Emprestimo;
-import com.example.sgb.model.enums.Disponibilidade;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -15,7 +14,4 @@ public interface EmprestimoRepository extends JpaRepository<Emprestimo, Integer>
     
     List<Emprestimo> findByLivro_Codigolivro(Integer codLivro);
 
-    List<Emprestimo> findByDisponibilidade(Disponibilidade disponibilidade);
-
-    List<Emprestimo> findByUsuario_CodigologinAndDisponibilidade(Integer codigologin, Disponibilidade disponibilidade);
 }
