@@ -1,11 +1,20 @@
 package com.example.sgb.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.example.sgb.model.enums.Disponibilidade;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "emprestimo")
 public class Emprestimo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "codigoemprestimo")
@@ -26,24 +35,25 @@ public class Emprestimo {
     private LocalDate dataderetirada;
 
     @Column
-    private LocalDate data_prevista;
+    private LocalDate dataPrevista;
 
-    // Getters e Setters
-    public Integer getCodigoemprestimo() { return codigoemprestimo; }
-    public void setCodigoemprestimo(Integer codigoemprestimo) { this.codigoemprestimo = codigoemprestimo; }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Disponibilidade disponibilidade;
 
-    public Livro getLivro() { return livro; }
-    public void setLivro(Livro livro) { this.livro = livro; }
+    @Transient
+    private Integer diasEmAtraso;
 
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+    @Transient
+    private BigDecimal saldoDevedor;
 
-    public LocalDate getDatadeentrega() { return datadeentrega; }
-    public void setDatadeentrega(LocalDate datadeentrega) { this.datadeentrega = datadeentrega; }
+    @Transient
+    private Boolean emAtraso;
 
-    public LocalDate getDataderetirada() { return dataderetirada; }
-    public void setDataderetirada(LocalDate dataderetirada) { this.dataderetirada = dataderetirada; }
+    @Transient
+    private String nomeLivro;
 
-    public LocalDate getData_prevista() { return data_prevista; }
-    public void setData_prevista(LocalDate data_prevista) { this.data_prevista = data_prevista; }
+    @Transient
+    private String nomeUsuario;
+
 }

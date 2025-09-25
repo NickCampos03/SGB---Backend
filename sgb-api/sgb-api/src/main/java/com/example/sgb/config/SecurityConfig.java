@@ -89,7 +89,7 @@ public class SecurityConfig {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             Usuario usuario = usuarioRepository.findByEmail(authentication.getName()).orElse(null);
-            String perfil = usuario != null ? usuario.getPerfil() : "USER";
+            String perfil = usuario != null ? usuario.getPerfil().name() : "USER";
             HashMap<String, Object> claims = new HashMap<>();
             claims.put("perfil", perfil);
             String token = jwtUtil.generateToken(authentication.getName(), claims);
