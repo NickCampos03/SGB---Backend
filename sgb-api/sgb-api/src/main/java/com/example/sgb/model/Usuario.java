@@ -33,6 +33,6 @@ public class Usuario {
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 50, nullable = false)
+    @Column(name = "perfil")
     private Perfil perfil;
 }

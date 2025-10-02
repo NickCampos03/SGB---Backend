@@ -8,10 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface GeneroRepository extends JpaRepository<Genero, Integer> {
-
-    // Busca um gênero pelo nome (opcional)
     Optional<Genero> findByNome(String nome);
-
-    // Verifica se existe um gênero pelo nome
-    boolean existsByNome(String nome);
 }

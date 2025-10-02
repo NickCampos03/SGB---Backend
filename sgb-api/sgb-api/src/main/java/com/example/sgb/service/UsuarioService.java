@@ -20,8 +20,8 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public List<Usuario> listarTodos(String perfil) {
-        if (perfil != null && !perfil.isBlank()) {
+    public List<Usuario> listarTodos(Perfil perfil) {
+        if (perfil != null) {
             return usuarioRepository.findByPerfil(perfil);
         }
         return usuarioRepository.findAll();

@@ -1,6 +1,7 @@
 package com.example.sgb.controller;
 
 import com.example.sgb.model.Usuario;
+import com.example.sgb.model.enums.Perfil;
 import com.example.sgb.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'BIBLIOTECARIO')")
-    public List<Usuario> listarTodos(@RequestParam(required = false) String perfil) {
+    public List<Usuario> listarTodos(@RequestParam(required = false) Perfil perfil) {
         return usuarioService.listarTodos(perfil);
     }
 

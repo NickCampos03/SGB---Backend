@@ -27,6 +27,6 @@ public class Livro {
     private Genero genero;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
+    @Column(name = "disponibilidade")
     private Disponibilidade disponibilidade;
 }

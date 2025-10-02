@@ -10,10 +10,7 @@ import java.util.List;
 
 @Repository
 public interface LivroRepository extends JpaRepository<Livro, Integer> {
-
     List<Livro> findByGenero(Genero genero);
-
     List<Livro> findByDisponibilidade(Disponibilidade disponibilidade);
-
     List<Livro> findByGeneroAndDisponibilidade(Genero genero, Disponibilidade disponibilidade);
 }
