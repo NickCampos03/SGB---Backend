@@ -44,6 +44,7 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'BIBLIOTECARIO')")

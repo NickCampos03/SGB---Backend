@@ -18,23 +18,22 @@ public class Emprestimo {
     private Integer codigoemprestimo;
 
     @ManyToOne
-    @JoinColumn(name = "cod_livro", referencedColumnName = "codigolivro", nullable = false)
+    @JoinColumn(name = "livro_id", referencedColumnName = "codigolivro", nullable = false)
     private Livro livro;
 
     @ManyToOne
-    @JoinColumn(name = "cod_usuario", referencedColumnName = "codigologin", nullable = false)
+    @JoinColumn(name = "usuario_id", referencedColumnName = "codigologin", nullable = false)
     private Usuario usuario;
 
-    @Column
+    @Column(name = "datadeentrega")
     private LocalDate datadeentrega;
 
-    @Column
+    @Column(name = "dataderetirada")
     private LocalDate dataderetirada;
 
-    @Column
+    @Column(name = "dataprevista")
     private LocalDate dataPrevista;
 
-    @Column
+    @Column(name = "ematraso")
     private Boolean emAtraso;
-
 }

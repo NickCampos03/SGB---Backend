@@ -17,19 +17,19 @@ public class Usuario {
     @Column(name = "codigologin")
     private Integer codigologin;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "nome", length = 100)
     private String nome;
 
-    @Column(nullable = false)
+    @Column(name = "idade")
     private Integer idade;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(length = 100)
+    @Column(name = "telefone")
     private String telefone;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "senha")
     private String senha;
 
     @Enumerated(EnumType.STRING)
