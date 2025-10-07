@@ -30,8 +30,7 @@ public class UsuarioController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BIBLIOTECARIO')")
     public ResponseEntity<Usuario> buscarPorId(@PathVariable Integer id) {
         Optional<Usuario> usuario = usuarioService.buscarPorId(id);
-        return usuario.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return usuario.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -40,11 +39,14 @@ public class UsuarioController {
         try {
             Usuario salvo = usuarioService.criar(usuario, authentication);
             return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-        } catch (IllegalArgumentException | SecurityException e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar usuário.");
         }
     }
-    
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'BIBLIOTECARIO')")
@@ -53,8 +55,12 @@ public class UsuarioController {
         try {
             Usuario atualizado = usuarioService.atualizar(id, usuario, authentication);
             return ResponseEntity.ok(atualizado);
-        } catch (IllegalArgumentException | SecurityException e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao atualizar usuário.");
         }
     }
 
@@ -68,6 +74,8 @@ public class UsuarioController {
             return ResponseEntity.notFound().build();
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao excluir usuário.");
         }
     }
 }

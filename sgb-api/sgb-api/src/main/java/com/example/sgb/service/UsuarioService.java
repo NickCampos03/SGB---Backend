@@ -32,14 +32,18 @@ public class UsuarioService {
     }
 
     public Usuario criar(Usuario usuario, Authentication authentication) {
-        if (!isPerfilValido(usuario.getPerfil())) {
-            throw new IllegalArgumentException("Perfil inválido. Valores aceitos: USUARIO, BIBLIOTECARIO");
+        // validação do perfil
+        if (usuario.getPerfil() == null) {
+            usuario.setPerfil(Perfil.USUARIO);
         }
+
         if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("E-mail já cadastrado em outro usuário.");
+            throw new IllegalArgumentException("E-mail já cadastrado.");
         }
-        if (temRestricaoBibliotecario(authentication, usuario.getPerfil())) {
-            throw new SecurityException("BIBLIOTECARIO só pode criar usuários com perfil USUARIO");
+
+        // restrição de bibliotecário
+        if (isBibliotecario(authentication) && usuario.getPerfil() != Perfil.USUARIO) {
+            throw new SecurityException("BIBLIOTECARIO só pode criar usuários com perfil USUARIO.");
         }
 
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
@@ -47,53 +51,49 @@ public class UsuarioService {
     }
 
     public Usuario atualizar(Integer id, Usuario usuario, Authentication authentication) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new IllegalArgumentException("Usuário não encontrado.");
-        }
-        if (!isPerfilValido(usuario.getPerfil())) {
-            throw new IllegalArgumentException("Perfil inválido. Valores aceitos: USUARIO, BIBLIOTECARIO");
+        Usuario existente = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+        // restrição de bibliotecário
+        if (isBibliotecario(authentication) && existente.getPerfil() != Perfil.USUARIO) {
+            throw new SecurityException("BIBLIOTECARIO só pode editar usuários com perfil USUARIO.");
         }
 
-        Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(usuario.getEmail());
-        if (usuarioExistente.isPresent() && !usuarioExistente.get().getCodigologin().equals(id)) {
-            throw new IllegalArgumentException("E-mail já cadastrado em outro usuário.");
-        }
-        if (temRestricaoBibliotecario(authentication, usuario.getPerfil())) {
-            throw new SecurityException("BIBLIOTECARIO só pode editar usuários com perfil USUARIO");
+        // mantém senha antiga se não vier nova
+        if (usuario.getSenha() == null || usuario.getSenha().isBlank()) {
+            usuario.setSenha(existente.getSenha());
+        } else {
+            usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
-        usuario.setCodigologin(id);
-        return usuarioRepository.save(usuario);
+        existente.setNome(usuario.getNome());
+        existente.setEmail(usuario.getEmail());
+        existente.setTelefone(usuario.getTelefone());
+        existente.setIdade(usuario.getIdade());
+        existente.setPerfil(usuario.getPerfil());
+
+        return usuarioRepository.save(existente);
     }
 
     public void deletar(Integer id, Authentication authentication) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
-        if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuário não encontrado.");
-        }
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
-        Usuario usuario = usuarioOpt.get();
         if (authentication != null && usuario.getEmail().equals(authentication.getName())) {
             throw new SecurityException("Você não pode excluir a si mesmo.");
         }
-        if (temRestricaoBibliotecario(authentication, usuario.getPerfil())) {
-            throw new SecurityException("BIBLIOTECARIO só pode excluir usuários com perfil USUARIO");
+
+        // restrição de bibliotecário
+        if (isBibliotecario(authentication) && usuario.getPerfil() != Perfil.USUARIO) {
+            throw new SecurityException("BIBLIOTECARIO só pode excluir usuários com perfil USUARIO.");
         }
 
         usuarioRepository.deleteById(id);
     }
 
-    private boolean temRestricaoBibliotecario(Authentication authentication, Perfil perfilDoAlvo) {
+    private boolean isBibliotecario(Authentication authentication) {
         if (authentication == null) return false;
         return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_BIBLIOTECARIO"))
-                && !"USUARIO".equals(perfilDoAlvo);
-    }
-
-    private boolean isPerfilValido(Perfil perfil) {
-        for (Perfil p : Perfil.values()) {
-            if (p.name().equals(perfil)) return true;
-        }
-        return false;
+                .anyMatch(a -> a.getAuthority().equals("ROLE_BIBLIOTECARIO"));
     }
 }
