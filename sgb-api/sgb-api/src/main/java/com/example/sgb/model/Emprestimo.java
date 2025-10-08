@@ -31,7 +31,7 @@ public class Emprestimo {
     @Column(name = "dataderetirada")
     private LocalDate dataderetirada;
 
-    @Column(name = "dataprevista")
+    @Column(name="dataprevista", nullable=false)
     private LocalDate dataPrevista;
 
     @Column(name = "ematraso")
