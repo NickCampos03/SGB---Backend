@@ -35,5 +35,5 @@ public class Emprestimo {
     private LocalDate dataPrevista;
 
     @Column(name = "ematraso")
-    private Boolean emAtraso;
+    private boolean emAtraso;
 }

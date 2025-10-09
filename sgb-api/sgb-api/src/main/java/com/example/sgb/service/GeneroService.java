@@ -25,10 +25,25 @@ public class GeneroService {
         return generoRepository.findById(id);
     }
 
-    // Salvar ou atualizar
+    // Salvar
     public Genero salvar(Genero genero) {
+        if(generoRepository.findByNome(genero.getNome()).isPresent()){
+            throw new IllegalArgumentException("Genero já cadastrado.");
+        }
         return generoRepository.save(genero);
     }
+
+public Genero atualizar(Genero genero) {
+    Optional<Genero> generoExistente = generoRepository.findById(genero.getId());
+    if (!generoExistente.isPresent()) {
+        throw new RuntimeException("Gênero não encontrado com id: " + genero.getId());
+    }
+
+    Genero generoAtualizado = generoExistente.get();
+    generoAtualizado.setNome(genero.getNome());
+
+    return generoRepository.save(generoAtualizado);
+}
 
     // Deletar por ID
     public void deletar(Integer id) {
