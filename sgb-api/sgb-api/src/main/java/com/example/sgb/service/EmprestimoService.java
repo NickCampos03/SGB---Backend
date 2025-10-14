@@ -3,6 +3,7 @@ package com.example.sgb.service;
 import com.example.sgb.model.Emprestimo;
 import com.example.sgb.model.Livro;
 import com.example.sgb.model.Usuario;
+import com.example.sgb.model.enums.Disponibilidade;
 import com.example.sgb.repository.EmprestimoRepository;
 import com.example.sgb.repository.LivroRepository;
 import com.example.sgb.repository.UsuarioRepository;
@@ -27,59 +28,75 @@ public class EmprestimoService {
     @Autowired
     private LivroRepository livroRepository;
 
+
     public List<Emprestimo> listarTodos(boolean isAdminOuBibliotecario, String emailUsuario) {
         if (isAdminOuBibliotecario) {
             return emprestimoRepository.findAll();
         } else {
             Integer codUsuario = usuarioRepository.findByEmail(emailUsuario)
-                    .map(Usuario::getCodigologin)
+                    .map(Usuario::getCodigoLogin)
                     .orElse(-1);
-            return emprestimoRepository.findByUsuario_Codigologin(codUsuario);
+            return emprestimoRepository.findByUsuario_CodigoLogin(codUsuario);
         }
     }
 
     public ResponseEntity<?> criarEmprestimo(Emprestimo emprestimo, boolean isUsuario, String email) {
-        // validação datas
-        if (emprestimo.getDataderetirada() != null && emprestimo.getDataderetirada().isAfter(LocalDate.now())) {
+
+        // Validação das datas
+        if (emprestimo.getDataDeRetirada() != null && emprestimo.getDataDeRetirada().isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest().body("A data de retirada não pode ser no futuro.");
         }
-        if (emprestimo.getDataPrevista() != null && emprestimo.getDataderetirada() != null &&
-                emprestimo.getDataPrevista().isBefore(emprestimo.getDataderetirada())) {
+        if (emprestimo.getDataPrevista() != null && emprestimo.getDataDeRetirada() != null &&
+                emprestimo.getDataPrevista().isBefore(emprestimo.getDataDeRetirada())) {
             return ResponseEntity.badRequest().body("A data prevista não pode ser anterior à retirada.");
         }
 
-        // livro
-        if (emprestimo.getLivro() == null || emprestimo.getLivro().getCodigolivro() == null) {
+        // Verifica livro
+        if (emprestimo.getLivro() == null || emprestimo.getLivro().getCodigoLivro() == null) {
             return ResponseEntity.badRequest().body("Livro não informado.");
         }
-        Optional<Livro> livroOpt = livroRepository.findById(emprestimo.getLivro().getCodigolivro());
+        Optional<Livro> livroOpt = livroRepository.findById(emprestimo.getLivro().getCodigoLivro());
         if (livroOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Livro não encontrado.");
         }
+        Livro livro = livroOpt.get();
 
-        // usuário
-        if (emprestimo.getUsuario() == null || emprestimo.getUsuario().getCodigologin() == null) {
+        if (livro.getDisponibilidade() == Disponibilidade.INDISPONIVEL) {
+            return ResponseEntity.badRequest().body("O livro selecionado está indisponível para empréstimo.");
+        }
+
+        // Verifica usuário
+        if (emprestimo.getUsuario() == null || emprestimo.getUsuario().getCodigoLogin() == null) {
             return ResponseEntity.badRequest().body("Usuário não informado.");
         }
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(emprestimo.getUsuario().getCodigologin());
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(emprestimo.getUsuario().getCodigoLogin());
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Usuário não encontrado.");
         }
 
         Usuario usuario = usuarioOpt.get();
         if (isUsuario) {
-            Integer codUsuarioLogado = usuarioRepository.findByEmail(email).map(Usuario::getCodigologin).orElse(-1);
-            if (!usuario.getCodigologin().equals(codUsuarioLogado)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuário só pode criar empréstimo para si mesmo.");
+            Integer codUsuarioLogado = usuarioRepository.findByEmail(email)
+                    .map(Usuario::getCodigoLogin)
+                    .orElse(-1);
+            if (!usuario.getCodigoLogin().equals(codUsuarioLogado)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Usuário só pode criar empréstimo para si mesmo.");
             }
         }
 
-        emprestimo.setLivro(livroOpt.get());
-        emprestimo.setUsuario(usuario);
-        Emprestimo salvo = emprestimoRepository.save(emprestimo);
+        // Marca o livro como indisponível
+        livro.setDisponibilidade(Disponibilidade.INDISPONIVEL);
+        livroRepository.save(livro);
 
+        emprestimo.setLivro(livro);
+        emprestimo.setUsuario(usuario);
+        emprestimo.setDataDeRetirada(LocalDate.now());
+
+        Emprestimo salvo = emprestimoRepository.save(emprestimo);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
+
 
     public ResponseEntity<?> atualizarEmprestimo(Integer id, Emprestimo emprestimo) {
         Optional<Emprestimo> emprestimoOpt = emprestimoRepository.findById(id);
@@ -88,24 +105,42 @@ public class EmprestimoService {
         }
 
         Emprestimo existente = emprestimoOpt.get();
-        LocalDate novaDataEntrega = emprestimo.getDatadeentrega();
+        LocalDate novaDataEntrega = emprestimo.getDataDeEntrega();
 
-        if (novaDataEntrega != null && existente.getDataderetirada() != null &&
-                novaDataEntrega.isBefore(existente.getDataderetirada())) {
+        if (novaDataEntrega != null && existente.getDataDeRetirada() != null &&
+                novaDataEntrega.isBefore(existente.getDataDeRetirada())) {
             return ResponseEntity.badRequest().body("Data de entrega não pode ser anterior à retirada.");
         }
 
-        existente.setDatadeentrega(novaDataEntrega);
+        existente.setDataDeEntrega(novaDataEntrega);
         Emprestimo salvo = emprestimoRepository.save(existente);
+
+
+        if (novaDataEntrega != null) {
+            Livro livro = existente.getLivro();
+            livro.setDisponibilidade(Disponibilidade.DISPONIVEL);
+            livroRepository.save(livro);
+        }
 
         return ResponseEntity.ok(salvo);
     }
 
+  
     public ResponseEntity<?> deletarEmprestimo(Integer id) {
         Optional<Emprestimo> emprestimoOpt = emprestimoRepository.findById(id);
         if (emprestimoOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Emprestimo emprestimo = emprestimoOpt.get();
+
+        // Garante que o livro fique disponível ao excluir o empréstimo
+        Livro livro = emprestimo.getLivro();
+        if (livro != null) {
+            livro.setDisponibilidade(Disponibilidade.DISPONIVEL);
+            livroRepository.save(livro);
+        }
+
         emprestimoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

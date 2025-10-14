@@ -96,7 +96,7 @@ public class SecurityConfig {
             HashMap<String, Object> result = new HashMap<>();
             result.put("status", "success");
             result.put("user", authentication.getName());
-            result.put("userId", usuario != null ? usuario.getCodigologin() : null);
+            result.put("userId", usuario != null ? usuario.getCodigoLogin() : null);
             result.put("perfil", perfil);
             result.put("token", token);
             new ObjectMapper().writeValue(response.getWriter(), result);

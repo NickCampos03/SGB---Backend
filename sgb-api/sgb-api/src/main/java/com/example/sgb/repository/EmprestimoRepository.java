@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface EmprestimoRepository extends JpaRepository<Emprestimo, Integer>, JpaSpecificationExecutor<Emprestimo> {
-    List<Emprestimo> findByUsuario_Codigologin(Integer codigologin);   
-    List<Emprestimo> findByLivro_Codigolivro(Integer codLivro);
+    List<Emprestimo> findByUsuario_CodigoLogin(Integer codigoLogin);   
+    List<Emprestimo> findByLivro_CodigoLivro(Integer codigoLivro);
 
 }

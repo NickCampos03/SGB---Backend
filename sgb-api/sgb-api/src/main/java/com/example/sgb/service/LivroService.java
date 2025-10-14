@@ -56,7 +56,7 @@ public class LivroService {
             throw new RuntimeException("Livro não encontrado!");
         }
         validarGenero(livro);
-        livro.setCodigolivro(id);
+        livro.setCodigoLivro(id);
         return livroRepository.save(livro);
     }
 

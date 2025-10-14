@@ -15,7 +15,7 @@ public class Emprestimo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "codigoemprestimo")
-    private Integer codigoemprestimo;
+    private Integer codigoEmprestimo;
 
     @ManyToOne
     @JoinColumn(name = "livro_id", referencedColumnName = "codigolivro", nullable = false)
@@ -26,14 +26,17 @@ public class Emprestimo {
     private Usuario usuario;
 
     @Column(name = "datadeentrega")
-    private LocalDate datadeentrega;
+    private LocalDate dataDeEntrega;
 
     @Column(name = "dataderetirada")
-    private LocalDate dataderetirada;
+    private LocalDate dataDeRetirada;
 
     @Column(name="dataprevista", nullable=false)
     private LocalDate dataPrevista;
 
     @Column(name = "ematraso")
     private boolean emAtraso;
+
+    @Column(name = "valordevendo")
+    private Double valorDevendo;
 }
