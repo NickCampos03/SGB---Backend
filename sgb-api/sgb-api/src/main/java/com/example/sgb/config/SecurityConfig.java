@@ -48,10 +48,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) 
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/hello").permitAll() 
-                .requestMatchers("/admin/**").hasRole("ADMIN") 
-                .anyRequest().authenticated() 
-            )
+                    
+                        .requestMatchers(
+                            "/",              
+                            "/index.html",        
+                            "/assets/**",         
+                            "/*.ico",   
+                            "/*.svg",
+                            "/*.css",      
+                            "/*.png",            
+                            "/*.js",              
+                            "/login", 
+                            "/hello"
+                        ).permitAll() 
+                        .requestMatchers("/admin/**").hasRole("ADMIN") 
+                        .anyRequest().authenticated() 
+                    )
             .addFilterBefore(jwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // Filtro JWT para todas as rotas
             .addFilterBefore(jsonAuthenticationFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class) // Login via JSON
             .sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)); // Stateless
