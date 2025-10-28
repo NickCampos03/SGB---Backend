@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +29,25 @@ public class EmprestimoService {
     @Autowired
     private LivroRepository livroRepository;
 
-
     public List<Emprestimo> listarTodos(boolean isAdminOuBibliotecario, String emailUsuario) {
+        List<Emprestimo> emprestimos;
+
         if (isAdminOuBibliotecario) {
-            return emprestimoRepository.findAll();
+            emprestimos = emprestimoRepository.findAll();
         } else {
             Integer codUsuario = usuarioRepository.findByEmail(emailUsuario)
                     .map(Usuario::getCodigoLogin)
                     .orElse(-1);
-            return emprestimoRepository.findByUsuario_CodigoLogin(codUsuario);
+            emprestimos = emprestimoRepository.findByUsuario_CodigoLogin(codUsuario);
         }
+
+        // ✅ Calcula atraso e saldo devedor antes de retornar
+        emprestimos.forEach(this::calcularAtrasoEMulta);
+
+        // (Opcional) salvar automaticamente as atualizações no banco:
+        // emprestimoRepository.saveAll(emprestimos);
+
+        return emprestimos;
     }
 
     public ResponseEntity<?> criarEmprestimo(Emprestimo emprestimo, boolean isUsuario, String email) {
@@ -92,11 +102,11 @@ public class EmprestimoService {
         emprestimo.setLivro(livro);
         emprestimo.setUsuario(usuario);
         emprestimo.setDataDeRetirada(LocalDate.now());
+        emprestimo.setDataPrevista(LocalDate.now().plusDays(14));
 
         Emprestimo salvo = emprestimoRepository.save(emprestimo);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
-
 
     public ResponseEntity<?> atualizarEmprestimo(Integer id, Emprestimo emprestimo) {
         Optional<Emprestimo> emprestimoOpt = emprestimoRepository.findById(id);
@@ -113,8 +123,11 @@ public class EmprestimoService {
         }
 
         existente.setDataDeEntrega(novaDataEntrega);
-        Emprestimo salvo = emprestimoRepository.save(existente);
 
+        // ✅ Recalcula multa/atraso ao atualizar
+        calcularAtrasoEMulta(existente);
+
+        Emprestimo salvo = emprestimoRepository.save(existente);
 
         if (novaDataEntrega != null) {
             Livro livro = existente.getLivro();
@@ -125,7 +138,6 @@ public class EmprestimoService {
         return ResponseEntity.ok(salvo);
     }
 
-  
     public ResponseEntity<?> deletarEmprestimo(Integer id) {
         Optional<Emprestimo> emprestimoOpt = emprestimoRepository.findById(id);
         if (emprestimoOpt.isEmpty()) {
@@ -143,5 +155,22 @@ public class EmprestimoService {
 
         emprestimoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 🧮 Cálculo de atraso e saldo devedor (substitui a lógica da VIEW SQL)
+     */
+    private void calcularAtrasoEMulta(Emprestimo emprestimo) {
+        if (emprestimo.getDataPrevista() == null)
+            return;
+
+        long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataPrevista(), LocalDate.now());
+        if (diasAtraso > 0) {
+            emprestimo.setEmAtraso(true);
+            emprestimo.setValorDevendo(diasAtraso * 0.5); // 0.5 = multa diária
+        } else {
+            emprestimo.setEmAtraso(false);
+            emprestimo.setValorDevendo(0.0);
+        }
     }
 }
