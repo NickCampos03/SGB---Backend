@@ -58,7 +58,15 @@ public class UsuarioService {
         if (isBibliotecario(authentication) && existente.getPerfil() != Perfil.USUARIO) {
             throw new SecurityException("BIBLIOTECARIO só pode editar usuários com perfil USUARIO.");
         }
+        String emailLogado = authentication.getName();
+        Usuario logado = usuarioRepository.findByEmail(emailLogado)
+                .orElseThrow(() -> new SecurityException("Usuário autenticado não encontrado."));
 
+        // regra: somente ADMIN pode alterar o perfil
+        if (logado.getPerfil() != Perfil.ADMIN) {
+            // mantém o perfil antigo
+            usuario.setPerfil(existente.getPerfil());
+        }
         // mantém senha antiga se não vier nova
         if (usuario.getSenha() == null || usuario.getSenha().isBlank()) {
             usuario.setSenha(existente.getSenha());
