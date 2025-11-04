@@ -77,7 +77,7 @@ public class UsuarioService {
         existente.setNome(usuario.getNome());
         existente.setEmail(usuario.getEmail());
         existente.setTelefone(usuario.getTelefone());
-        existente.setIdade(usuario.getIdade());
+        existente.setDataDeNascimento(usuario.getDataDeNascimento());
         existente.setPerfil(usuario.getPerfil());
 
         return usuarioRepository.save(existente);

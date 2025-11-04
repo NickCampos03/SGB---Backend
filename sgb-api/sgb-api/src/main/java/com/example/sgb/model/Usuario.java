@@ -1,6 +1,7 @@
 package com.example.sgb.model;
 
 import com.example.sgb.model.enums.Perfil;
+import java.time.LocalDate;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,8 +21,8 @@ public class Usuario {
     @Column(name = "nome", length = 100)
     private String nome;
 
-    @Column(name = "idade")
-    private Integer idade;
+    @Column(name = "datadenascimento")
+    private LocalDate dataDeNascimento;
 
     @Column(name = "email", unique = true)
     private String email;
