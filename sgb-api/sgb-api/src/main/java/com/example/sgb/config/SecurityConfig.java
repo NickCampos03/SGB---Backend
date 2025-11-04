@@ -2,6 +2,7 @@ package com.example.sgb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -48,7 +49,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) 
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                    
+                        
                         .requestMatchers(
                             "/",              
                             "/index.html",        
@@ -60,7 +61,9 @@ public class SecurityConfig {
                             "/*.js",              
                             "/login", 
                             "/hello"
+                            
                         ).permitAll() 
+                        .requestMatchers(HttpMethod.POST, "/usuarios/publico").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN") 
                         .anyRequest().authenticated() 
                     )

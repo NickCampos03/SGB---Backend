@@ -47,6 +47,18 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar usuário.");
         }
     }
+    //Sem necessidade de autenticacao na tela de autocadastro
+    @PostMapping("/publico")
+    public ResponseEntity<?> cadastrarPublico(@RequestBody Usuario usuario) {
+        try {
+            // força perfil de USUARIO para evitar cadastro de admin/bibliotecário
+            usuario.setPerfil(Perfil.USUARIO);
+            Usuario novo = usuarioService.criarPublico(usuario);
+            return ResponseEntity.ok(novo);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar usuário.");
+        }
+    }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'BIBLIOTECARIO')")

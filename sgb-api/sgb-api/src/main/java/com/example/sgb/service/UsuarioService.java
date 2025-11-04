@@ -104,4 +104,19 @@ public class UsuarioService {
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_BIBLIOTECARIO"));
     }
+
+    public Usuario criarPublico(Usuario usuario) {
+        // força perfil de USUARIO
+        usuario.setPerfil(Perfil.USUARIO);
+
+        // verifica duplicação de email
+        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("E-mail já cadastrado");
+        }
+
+        // encripta senha
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+
+        return usuarioRepository.save(usuario);
+    }
 }
