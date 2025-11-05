@@ -19,9 +19,15 @@ public class EmprestimoController {
     private EmprestimoService emprestimoService;
 
     @GetMapping
-    public List<Emprestimo> listarTodos(Authentication authentication) {
+    public List<Emprestimo> listarEmprestimos(
+            @RequestParam(required = false) Integer codigoLivro,
+            @RequestParam(required = false) Integer usuario,
+            @RequestParam(required = false) Boolean emAtraso,
+            @RequestParam(required = false) Boolean entregue,
+            Authentication authentication
+    ) {
         boolean isAdminOuBib = hasRole(authentication, "ADMIN") || hasRole(authentication, "BIBLIOTECARIO");
-        return emprestimoService.listarTodos(isAdminOuBib, authentication.getName());
+        return emprestimoService.buscarFiltrado(isAdminOuBib, authentication.getName(), codigoLivro, usuario, emAtraso, entregue);
     }
 
     @PostMapping

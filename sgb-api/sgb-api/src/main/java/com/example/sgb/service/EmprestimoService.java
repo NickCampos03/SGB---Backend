@@ -157,9 +157,6 @@ public class EmprestimoService {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 🧮 Cálculo de atraso e saldo devedor (substitui a lógica da VIEW SQL)
-     */
     private void calcularAtrasoEMulta(Emprestimo emprestimo) {
         if (emprestimo.getDataPrevista() == null)
             return;
@@ -173,4 +170,45 @@ public class EmprestimoService {
             emprestimo.setValorDevendo(0.0);
         }
     }
+    public List<Emprestimo> buscarFiltrado(boolean isAdminOuBib, String username,
+                                        Integer codigoLivro, Integer usuario,
+                                        Boolean emAtraso, Boolean entregue) {
+
+        // Se for usuário comum, filtra apenas os dele
+        if (!isAdminOuBib) {
+            Usuario u = usuarioRepository.findByEmail(username).orElseThrow();
+            usuario = u.getCodigoLogin();
+        }
+
+        // Começa pela lista completa ou do usuário
+        List<Emprestimo> emprestimos;
+
+        if (usuario != null) {
+            emprestimos = emprestimoRepository.findByUsuario_CodigoLogin(usuario);
+        } else {
+            emprestimos = emprestimoRepository.findAll();
+        }
+
+        // Aplica filtros em memória (simples e funcional)
+        if (codigoLivro != null) {
+            emprestimos = emprestimos.stream()
+                    .filter(e -> e.getLivro().getCodigoLivro().equals(codigoLivro))
+                    .toList();
+        }
+
+        if (emAtraso != null) {
+            emprestimos = emprestimos.stream()
+                    .filter(e -> e.isEmAtraso() == emAtraso)
+                    .toList();
+        }
+
+        if (Boolean.TRUE.equals(entregue)) {
+            emprestimos = emprestimos.stream()
+                    .filter(e -> e.getDataDeEntrega() != null)
+                    .toList();
+        }
+
+        return emprestimos;
+    }
+
 }
