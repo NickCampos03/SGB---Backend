@@ -95,6 +95,21 @@ public class EmprestimoService {
             }
         }
 
+        // ✅ Verifica se o usuário está devendo ou atingiu o limite
+        List<Emprestimo> emprestimosUsuario = emprestimoRepository.findByUsuario_CodigoLogin(usuario.getCodigoLogin());
+        boolean temAtraso = emprestimosUsuario.stream().anyMatch(Emprestimo::isEmAtraso);
+        if (temAtraso) {
+            return ResponseEntity.badRequest().body("Usuário possui empréstimos em atraso e não pode realizar novos.");
+        }
+
+        long emprestimosAtivos = emprestimosUsuario.stream()
+                .filter(e -> e.getDataDeEntrega() == null)
+                .count();
+
+        if (emprestimosAtivos >= 3) {
+            return ResponseEntity.badRequest().body("Usuário já possui 3 empréstimos ativos. Limite atingido.");
+        }
+
         // Marca o livro como indisponível
         livro.setDisponibilidade(Disponibilidade.INDISPONIVEL);
         livroRepository.save(livro);
