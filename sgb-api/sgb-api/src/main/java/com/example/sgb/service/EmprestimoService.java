@@ -44,8 +44,6 @@ public class EmprestimoService {
         // ✅ Calcula atraso e saldo devedor antes de retornar
         emprestimos.forEach(this::calcularAtrasoEMulta);
 
-        // (Opcional) salvar automaticamente as atualizações no banco:
-        // emprestimoRepository.saveAll(emprestimos);
 
         return emprestimos;
     }
@@ -146,6 +144,8 @@ public class EmprestimoService {
 
         if (novaDataEntrega != null) {
             Livro livro = existente.getLivro();
+            existente.setEmAtraso(false);
+            existente.setValorDevendo(0.0);
             livro.setDisponibilidade(Disponibilidade.DISPONIVEL);
             livroRepository.save(livro);
         }
@@ -189,13 +189,11 @@ public class EmprestimoService {
                                         Integer codigoLivro, Integer usuario,
                                         Boolean emAtraso, Boolean entregue) {
 
-        // Se for usuário comum, filtra apenas os dele
         if (!isAdminOuBib) {
             Usuario u = usuarioRepository.findByEmail(username).orElseThrow();
             usuario = u.getCodigoLogin();
         }
 
-        // Começa pela lista completa ou do usuário
         List<Emprestimo> emprestimos;
 
         if (usuario != null) {
@@ -204,12 +202,14 @@ public class EmprestimoService {
             emprestimos = emprestimoRepository.findAll();
         }
 
-        // Aplica filtros em memória (simples e funcional)
         if (codigoLivro != null) {
             emprestimos = emprestimos.stream()
                     .filter(e -> e.getLivro().getCodigoLivro().equals(codigoLivro))
                     .toList();
         }
+
+        // ✅ Recalcula o atraso e multa antes de aplicar filtro de atraso
+        emprestimos.forEach(this::calcularAtrasoEMulta);
 
         if (emAtraso != null) {
             emprestimos = emprestimos.stream()
