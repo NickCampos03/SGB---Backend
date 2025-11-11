@@ -44,7 +44,8 @@ public class EmprestimoService {
         // ✅ Calcula atraso e saldo devedor antes de retornar
         emprestimos.forEach(this::calcularAtrasoEMulta);
 
-
+        emprestimoRepository.saveAll(emprestimos);
+        
         return emprestimos;
     }
 
